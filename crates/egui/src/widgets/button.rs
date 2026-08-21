@@ -2,8 +2,8 @@ use epaint::Margin;
 
 use crate::{
     Atom, AtomExt as _, AtomKind, AtomLayout, AtomLayoutResponse, Atoms, Color32, CornerRadius,
-    Frame, Image, IntoAtoms, NumExt as _, Response, Sense, Stroke, TextStyle, TextWrapMode, Ui,
-    Vec2, Widget, WidgetInfo, WidgetText, WidgetType,
+    Frame, Image, IntoAtoms, Response, Sense, Stroke, TextStyle, TextWrapMode, Ui, Vec2, Widget,
+    WidgetInfo, WidgetText, WidgetType,
     widget_style::{ButtonStyle, Classes, HasClasses, SELECTED_CLASS, WidgetState},
 };
 
@@ -303,11 +303,6 @@ impl<'a> Button<'a> {
             mut classes,
         } = self;
 
-        // Min size height always equal or greater than interact size if not small
-        if !small {
-            min_size.y = min_size.y.at_least(ui.spacing().interact_size.y);
-        }
-
         if limit_image_size {
             layout.map_atoms(|atom| {
                 if matches!(&atom.kind, AtomKind::Image(_)) {
@@ -328,7 +323,17 @@ impl<'a> Button<'a> {
 
         classes.add_class_if(SELECTED_CLASS, selected.unwrap_or(false));
 
-        let ButtonStyle { frame, text_style } = ui.widget_style(id, &classes);
+        let ButtonStyle {
+            frame,
+            text_style,
+            min_size: style_min_size,
+        } = ui.widget_style(id, &classes);
+
+        // The theme decides how small a button may get — unless it is a `small` one, which sizes
+        // itself purely from its contents.
+        if !small {
+            min_size = min_size.max(style_min_size);
+        }
 
         let mut button_padding = if has_frame_margin {
             frame.inner_margin

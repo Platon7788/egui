@@ -88,6 +88,9 @@ impl StyleProvider<ButtonStyle> for DefaultStyle {
                 ..Default::default()
             },
             text_style: ws.text,
+            // Historically only the height was floored, so that a button is at least as tall as
+            // any other interactive widget on the same row.
+            min_size: Vec2::new(0.0, spacing.interact_size.y),
         }
     }
 }

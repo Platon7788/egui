@@ -10,6 +10,7 @@ pub use self::classes::{
 
 use core::fmt::Debug;
 
+use emath::Vec2;
 use epaint::{Color32, FontId, Stroke, text::TextWrapMode};
 
 use crate::{
@@ -51,6 +52,12 @@ impl WidgetStyle for BaseStyle {}
 pub struct ButtonStyle {
     pub frame: Frame,
     pub text_style: TextVisuals,
+
+    /// How small the button may get, before its contents are taken into account.
+    ///
+    /// Ignored by a [`crate::Button::small`] button, which sizes itself purely from its contents
+    /// and its own [`crate::Button::min_size`].
+    pub min_size: Vec2,
 }
 
 impl WidgetStyle for ButtonStyle {}
