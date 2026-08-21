@@ -7,6 +7,7 @@ use crate::{
     Sense, Ui, UiKind, UiStackInfo,
     containers::menu::{MenuConfig, MenuState, menu_style},
     style::StyleModifier,
+    widget_style::{HasClasses as _, MENU_CLASS},
 };
 
 /// What should we anchor the popup to?
@@ -594,6 +595,7 @@ impl<'a> Popup<'a> {
         let (pivot, anchor) = best_align.pivot_pos(&anchor_rect, gap);
 
         let mut area = Area::new(id)
+            .with_class_if(MENU_CLASS, kind == PopupKind::Menu)
             .order(kind.order())
             .pivot(pivot)
             .fixed_pos(anchor)

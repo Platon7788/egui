@@ -5,7 +5,7 @@
 mod classes;
 
 pub use self::classes::{
-    ClassName, Classes, HasClasses, READ_ONLY_CLASS, ROOT_CLASS, SELECTED_CLASS,
+    ClassName, Classes, HasClasses, MENU_CLASS, READ_ONLY_CLASS, ROOT_CLASS, SELECTED_CLASS,
 };
 
 use core::fmt::Debug;

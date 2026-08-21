@@ -13,6 +13,12 @@ pub const SELECTED_CLASS: &str = "selected";
 /// The read-only class is present on a [`crate::TextEdit`] whose buffer can't be edited.
 pub const READ_ONLY_CLASS: &str = "read-only";
 
+/// The menu class is present on the [`crate::Ui`] of a menu popup, and so on every widget in it.
+///
+/// A menu lays its items out itself, so a widget in one is generally styled to fit that layout
+/// rather than to stand on its own.
+pub const MENU_CLASS: &str = "menu";
+
 /// A class is a static string identifier.
 pub type ClassName = Cow<'static, str>;
 
