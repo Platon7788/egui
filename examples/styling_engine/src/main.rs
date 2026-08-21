@@ -68,6 +68,7 @@ impl StyleProvider<ButtonStyle> for MyTheme {
                 .corner_radius(self.corner_radius)
                 .inner_margin(8),
             text_style: base.text,
+            min_size: args.style.spacing.interact_size,
         }
     }
 }
