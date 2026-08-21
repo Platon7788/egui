@@ -6,8 +6,8 @@ use crate::{
     theme::StyleProvider,
     widget_style::{
         BaseStyle, ButtonStyle, CheckboxStyle, HasClasses as _, LabelStyle, LayoutStyle,
-        READ_ONLY_CLASS, SELECTED_CLASS, SeparatorStyle, StyleArgs, TextEditStyle, TextVisuals,
-        WidgetState,
+        PopupStyle, READ_ONLY_CLASS, SELECTED_CLASS, SeparatorStyle, StyleArgs, TextEditStyle,
+        TextVisuals, WidgetState,
     },
 };
 
@@ -95,6 +95,17 @@ impl StyleProvider<ButtonStyle> for DefaultStyle {
                 gap: spacing.icon_spacing,
             },
             text_style: ws.text,
+        }
+    }
+}
+
+impl StyleProvider<PopupStyle> for DefaultStyle {
+    fn style(&mut self, modifiers: &StyleArgs<'_>) -> PopupStyle {
+        let StyleArgs { style, .. } = modifiers;
+
+        PopupStyle {
+            frame: Frame::popup(style),
+            item_spacing: style.spacing.item_spacing,
         }
     }
 }
