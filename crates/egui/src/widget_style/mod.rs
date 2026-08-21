@@ -4,7 +4,9 @@
 
 mod classes;
 
-pub use self::classes::{ClassName, Classes, HasClasses, ROOT_CLASS, SELECTED_CLASS};
+pub use self::classes::{
+    ClassName, Classes, HasClasses, READ_ONLY_CLASS, ROOT_CLASS, SELECTED_CLASS,
+};
 
 use core::fmt::Debug;
 
@@ -52,6 +54,21 @@ pub struct ButtonStyle {
 }
 
 impl WidgetStyle for ButtonStyle {}
+
+/// Dedicated text edit style
+#[derive(Debug, Clone)]
+pub struct TextEditStyle {
+    /// Frame around the text, including its padding.
+    pub frame: Frame,
+
+    /// The text being edited.
+    pub text: TextVisuals,
+
+    /// The color of the hint text shown while the buffer is empty.
+    pub hint_text_color: Color32,
+}
+
+impl WidgetStyle for TextEditStyle {}
 
 /// Dedicated checkbox style
 #[derive(Debug, Clone)]

@@ -7,7 +7,8 @@ use crate::{
     theme::{StyleProvider, default_style::DefaultStyle},
     util::IdTypeMap,
     widget_style::{
-        BaseStyle, ButtonStyle, CheckboxStyle, LabelStyle, SeparatorStyle, WidgetStyle,
+        BaseStyle, ButtonStyle, CheckboxStyle, LabelStyle, SeparatorStyle, TextEditStyle,
+        WidgetStyle,
     },
 };
 
@@ -47,6 +48,11 @@ impl Default for Themes {
         );
 
         themes.insert_temp::<ThemeWrap<CheckboxStyle>>(
+            Id::NULL,
+            Arc::new(Mutex::new(Box::new(DefaultStyle))),
+        );
+
+        themes.insert_temp::<ThemeWrap<TextEditStyle>>(
             Id::NULL,
             Arc::new(Mutex::new(Box::new(DefaultStyle))),
         );

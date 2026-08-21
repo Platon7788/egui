@@ -10,6 +10,9 @@ pub const ROOT_CLASS: &str = "root";
 /// The selected class is a special class present on selected [`crate::Button`].
 pub const SELECTED_CLASS: &str = "selected";
 
+/// The read-only class is present on a [`crate::TextEdit`] whose buffer can't be edited.
+pub const READ_ONLY_CLASS: &str = "read-only";
+
 /// A class is a static string identifier.
 pub type ClassName = Cow<'static, str>;
 
@@ -64,6 +67,18 @@ pub trait HasClasses {
         Self: Sized,
     {
         self.classes_mut().add_if(class.into(), true);
+        self
+    }
+
+    /// Add all the given classes by consuming `self`
+    ///
+    /// Useful to forward the classes of a composite widget to the widgets it is built from.
+    #[inline]
+    fn with_classes(mut self, classes: Classes) -> Self
+    where
+        Self: Sized,
+    {
+        self.classes_mut().classes.extend(classes.classes);
         self
     }
 

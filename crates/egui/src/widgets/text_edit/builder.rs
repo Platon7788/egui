@@ -17,6 +17,7 @@ use crate::{
         self, CCursorRange, text_cursor_state::cursor_rect, visuals::paint_text_selection,
     },
     vec2,
+    widget_style::{Classes, HasClasses, READ_ONLY_CLASS, TextEditStyle},
 };
 
 use super::{TextEditOutput, TextEditState};
@@ -79,7 +80,7 @@ pub struct TextEdit<'t> {
     layouter: Option<LayouterFn<'t>>,
     password: bool,
     frame: Option<Frame>,
-    margin: Margin,
+    margin: Option<Margin>,
     multiline: bool,
     interactive: bool,
     desired_width: Option<f32>,
@@ -92,6 +93,7 @@ pub struct TextEdit<'t> {
     char_limit: usize,
     return_key: Option<KeyboardShortcut>,
     background_color: Option<Color32>,
+    classes: Classes,
 }
 
 impl WidgetWithState for TextEdit<'_> {
@@ -133,7 +135,7 @@ impl<'t> TextEdit<'t> {
             layouter: None,
             password: false,
             frame: None,
-            margin: Margin::symmetric(4, 2),
+            margin: None,
             multiline: true,
             interactive: true,
             desired_width: None,
@@ -152,6 +154,7 @@ impl<'t> TextEdit<'t> {
             char_limit: usize::MAX,
             return_key: Some(KeyboardShortcut::new(Modifiers::NONE, Key::Enter)),
             background_color: None,
+            classes: Classes::default(),
         }
     }
 
@@ -308,10 +311,10 @@ impl<'t> TextEdit<'t> {
         self
     }
 
-    /// Set margin of text. Default is `Margin::symmetric(4.0, 2.0)`
+    /// Override the padding around the text, which otherwise comes from the theme.
     #[inline]
     pub fn margin(mut self, margin: impl Into<Margin>) -> Self {
-        self.margin = margin.into();
+        self.margin = Some(margin.into());
         self
     }
 
@@ -417,6 +420,16 @@ impl Widget for TextEdit<'_> {
     }
 }
 
+impl HasClasses for TextEdit<'_> {
+    fn classes(&self) -> &Classes {
+        &self.classes
+    }
+
+    fn classes_mut(&mut self) -> &mut Classes {
+        &mut self.classes
+    }
+}
+
 impl TextEdit<'_> {
     /// Show the [`TextEdit`], returning a rich [`TextEditOutput`].
     ///
@@ -459,17 +472,38 @@ impl TextEdit<'_> {
             char_limit,
             return_key,
             background_color,
+            mut classes,
         } = self;
+
+        let id = id.unwrap_or_else(|| {
+            if let Some(id_salt) = id_salt {
+                ui.make_persistent_id(id_salt)
+            } else {
+                // Since we are only storing the cursor a persistent Id is not super important
+                let id = ui.next_auto_id();
+                ui.skip_ahead_auto_ids(1);
+                id
+            }
+        });
+
+        classes.add_class_if(READ_ONLY_CLASS, !text.is_mutable());
+        let TextEditStyle {
+            frame: styled_frame,
+            text: text_visuals,
+            hint_text_color,
+        } = ui.widget_style(id, &classes);
 
         let text_color = text_color
             .or_else(|| ui.visuals().override_text_color)
-            // .unwrap_or_else(|| ui.style().interact(&response).text_color()); // too bright
-            .unwrap_or_else(|| ui.visuals().widgets.inactive.text_color());
+            .unwrap_or(text_visuals.color);
 
         let prev_text = text.as_str().to_owned();
         let hint_text_str = hint_text.text().unwrap_or_default().to_string();
 
-        let font_id = font_selection.resolve(ui.style());
+        let font_id = match font_selection {
+            FontSelection::Default => text_visuals.font_id.clone(),
+            font_selection => font_selection.resolve(ui.style()),
+        };
         let row_height = ui.fonts_mut(|f| f.row_height(&font_id));
         let line_height = row_height + ui.spacing().extra_text_line_spacing;
 
@@ -502,17 +536,6 @@ impl TextEdit<'_> {
         let layouter = layouter.unwrap_or(&mut default_layouter);
 
         let min_inner_height = (desired_height_rows.at_least(1) as f32) * line_height;
-
-        let id = id.unwrap_or_else(|| {
-            if let Some(id_salt) = id_salt {
-                ui.make_persistent_id(id_salt)
-            } else {
-                // Since we are only storing the cursor a persistent Id is not super important
-                let id = ui.next_auto_id();
-                ui.skip_ahead_auto_ids(1);
-                id
-            }
-        });
 
         // On touch screens (e.g. mobile in `eframe` web), should
         // dragging select text, or scroll the enclosing [`ScrollArea`] (if any)?
@@ -549,7 +572,6 @@ impl TextEdit<'_> {
         }
 
         let mut text_changed = false;
-        let text_mutable = text.is_mutable();
 
         let mut handle_events = |ui: &Ui, galley: &mut Arc<Galley>, layouter, wrap_width, text| {
             if interactive && ui.memory(|mem| mem.has_focus(id)) {
@@ -591,6 +613,17 @@ impl TextEdit<'_> {
         // We need to calculate the galley within the atom closure, so we can calculate it based on
         // the available width (in case of wrapping multiline text edits). But we show it later,
         // so we can clip it to the available size. Thus, extract it from the atom closure here.
+        let frame = frame.unwrap_or_else(|| {
+            let mut frame = styled_frame;
+            if let Some(margin) = margin {
+                frame.inner_margin = margin;
+            }
+            if let Some(background_color) = background_color {
+                frame.fill = background_color;
+            }
+            frame
+        });
+
         let mut get_galley = None;
         let inner_rect_id = Id::new("text_edit_rect");
         let mut response = {
@@ -612,7 +645,7 @@ impl TextEdit<'_> {
 
                 // Since we can't set a fallback color per atom, we have to override it here.
                 // Sucks, since it means users won't be able to override it.
-                hint_text.map_texts(|t| t.color(ui.style().visuals.weak_text_color()));
+                hint_text.map_texts(|t| t.color(hint_text_color));
 
                 for mut atom in hint_text {
                     if !shrunk && matches!(atom.kind, AtomKind::Text(_)) {
@@ -637,7 +670,7 @@ impl TextEdit<'_> {
 
                 // Calculate the empty galley, so it can be read later. The available width is
                 // technically wrong, but doesn't matter since the galley is empty
-                let available_width = allocate_width - margin.sum().x;
+                let available_width = allocate_width - frame.total_margin().sum().x;
                 let galley = layouter(ui, text, available_width);
 
                 // We can't update the galley immediately here, since it would show both hint text
@@ -692,9 +725,6 @@ impl TextEdit<'_> {
                 atoms.push_right(atom);
             }
 
-            let custom_frame = frame.is_some();
-            let frame = frame.unwrap_or_else(|| Frame::new().inner_margin(margin));
-
             let min_height = min_inner_height + frame.total_margin().sum().y;
 
             // This wrap mode only affects the hint_text
@@ -704,7 +734,7 @@ impl TextEdit<'_> {
                 TextWrapMode::Truncate
             };
 
-            let mut allocated = AtomLayout::new(atoms)
+            let allocated = AtomLayout::new(atoms)
                 .id(id)
                 .min_size(Vec2::new(allocate_width, min_height))
                 .max_width(allocate_width)
@@ -713,43 +743,6 @@ impl TextEdit<'_> {
                 .align2(align)
                 .wrap_mode(wrap_mode)
                 .allocate(ui);
-
-            allocated.frame = if custom_frame {
-                allocated.frame
-            } else {
-                let visuals = ui.style().interact(&allocated.response);
-                let background_color =
-                    background_color.unwrap_or_else(|| ui.visuals().text_edit_bg_color());
-
-                let (corner_radius, background_color, stroke) = if text_mutable {
-                    if allocated.response.has_focus() {
-                        (
-                            visuals.corner_radius,
-                            background_color,
-                            ui.visuals().selection.stroke,
-                        )
-                    } else {
-                        (visuals.corner_radius, background_color, visuals.bg_stroke)
-                    }
-                } else {
-                    let visuals = &ui.style().visuals.widgets.inactive;
-                    (
-                        visuals.corner_radius,
-                        Color32::TRANSPARENT,
-                        visuals.bg_stroke,
-                    )
-                };
-                allocated
-                    .frame
-                    .fill(background_color)
-                    .corner_radius(corner_radius)
-                    .inner_margin(
-                        allocated.frame.inner_margin
-                            + Margin::same((visuals.expansion - stroke.width).round() as i8),
-                    )
-                    .outer_margin(Margin::same(-(visuals.expansion as i8)))
-                    .stroke(stroke)
-            };
 
             allocated.paint(ui)
         };
