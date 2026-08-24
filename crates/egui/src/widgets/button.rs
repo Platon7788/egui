@@ -366,6 +366,12 @@ impl<'a> Button<'a> {
 
         frame = frame.inner_margin(button_padding);
 
+        if !has_frame_margin {
+            // A frameless button asks for no padding, so any outer margin the theme used to
+            // compensate for that padding has to go as well.
+            frame = frame.outer_margin(Margin::ZERO);
+        }
+
         // Apply the style font and color as fallback
         layout = layout
             .fallback_font(text_style.font_id.clone())
@@ -375,7 +381,13 @@ impl<'a> Button<'a> {
         layout = if has_frame_margin && (state != WidgetState::Inactive || frame_when_inactive) {
             layout.frame(frame)
         } else {
-            layout.frame(Frame::new().inner_margin(frame.inner_margin))
+            // The frame is not painted, but it still takes up the same space: keep both margins,
+            // or the contents would move as soon as the button is hovered or selected.
+            layout.frame(
+                Frame::new()
+                    .inner_margin(frame.inner_margin)
+                    .outer_margin(frame.outer_margin),
+            )
         };
 
         let mut prepared = layout.min_size(min_size).allocate(ui);
