@@ -14,7 +14,7 @@ use emath::Vec2;
 use epaint::{Color32, FontId, Stroke, text::TextWrapMode};
 
 use crate::{
-    Context, Frame, Response, Style, UiStack,
+    Context, Frame, Response, Style, TextStyle, UiStack,
     style::{WidgetVisuals, Widgets},
 };
 
@@ -33,6 +33,24 @@ pub struct TextVisuals {
     /// Text decoration
     pub underline: Stroke,
     pub strikethrough: Stroke,
+}
+
+impl TextVisuals {
+    /// The undecorated body text of a [`Style`], as a starting point for a widget's own text.
+    ///
+    /// The color is the style's ordinary text color; a widget that paints its text in a color of
+    /// its own overrides it.
+    pub fn from_style(style: &Style) -> Self {
+        Self {
+            color: style.visuals.text_color(),
+            font_id: style
+                .override_font_id
+                .clone()
+                .unwrap_or_else(|| TextStyle::Body.resolve(style)),
+            underline: Stroke::NONE,
+            strikethrough: Stroke::NONE,
+        }
+    }
 }
 
 /// General widget style
@@ -175,4 +193,23 @@ pub struct StyleArgs<'a> {
     pub stack: &'a UiStack,
     pub style: &'a Style,
     pub ctx: &'a Context,
+}
+
+impl StyleArgs<'_> {
+    /// Does the widget, or any [`crate::Ui`] it sits in, carry this class?
+    ///
+    /// This is the equivalent of a descendant selector (`.parent .child`): it lets a container
+    /// style everything inside it without having to touch each widget. Use
+    /// [`HasClasses::has`] on [`Self::classes`] instead for a class only ever set on a widget.
+    pub fn has_class(&self, class: impl Into<ClassName>) -> bool {
+        let class = class.into();
+        self.classes.has(class.clone()) || self.stack.has_class(class)
+    }
+
+    /// Read a value from the widget's own classes, falling back to the [`crate::Ui`]s it sits in.
+    ///
+    /// See [`UiStack::inherited`] for how the fallback resolves.
+    pub fn inherited<T>(&self, from_classes: impl Fn(&Classes) -> Option<T>) -> Option<T> {
+        from_classes(self.classes).or_else(|| self.stack.inherited(from_classes))
+    }
 }
