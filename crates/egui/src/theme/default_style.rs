@@ -6,8 +6,8 @@ use crate::{
     theme::StyleProvider,
     widget_style::{
         BaseStyle, ButtonStyle, CheckboxStyle, HasClasses as _, LabelStyle, LayoutStyle,
-        PopupStyle, READ_ONLY_CLASS, SELECTED_CLASS, SeparatorStyle, StyleArgs, TextEditStyle,
-        TextVisuals, WidgetState,
+        PopupStyle, READ_ONLY_CLASS, SELECTED_CLASS, ScrollAreaStyle, SeparatorStyle, StyleArgs,
+        TextEditStyle, TextVisuals, WidgetState,
     },
 };
 
@@ -106,7 +106,15 @@ impl StyleProvider<PopupStyle> for DefaultStyle {
         PopupStyle {
             frame: Frame::popup(style),
             item_spacing: style.spacing.item_spacing,
-            scroll_overflow_margin: style.spacing.scroll.overflow_margin,
+        }
+    }
+}
+
+impl StyleProvider<ScrollAreaStyle> for DefaultStyle {
+    fn style(&mut self, modifiers: &StyleArgs<'_>) -> ScrollAreaStyle {
+        ScrollAreaStyle {
+            scroll: modifiers.style.spacing.scroll,
+            extend_into_parent_margin: false,
         }
     }
 }

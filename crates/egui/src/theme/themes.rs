@@ -7,8 +7,8 @@ use crate::{
     theme::{StyleProvider, default_style::DefaultStyle},
     util::IdTypeMap,
     widget_style::{
-        BaseStyle, ButtonStyle, CheckboxStyle, LabelStyle, PopupStyle, SeparatorStyle,
-        TextEditStyle, WidgetStyle,
+        BaseStyle, ButtonStyle, CheckboxStyle, LabelStyle, PopupStyle, ScrollAreaStyle,
+        SeparatorStyle, TextEditStyle, WidgetStyle,
     },
 };
 
@@ -58,6 +58,11 @@ impl Default for Themes {
         );
 
         themes.insert_temp::<ThemeWrap<TextEditStyle>>(
+            Id::NULL,
+            Arc::new(Mutex::new(Box::new(DefaultStyle))),
+        );
+
+        themes.insert_temp::<ThemeWrap<ScrollAreaStyle>>(
             Id::NULL,
             Arc::new(Mutex::new(Box::new(DefaultStyle))),
         );
