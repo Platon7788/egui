@@ -69,6 +69,7 @@ impl StyleProvider<ButtonStyle> for MyTheme {
                 .inner_margin(8),
             text_style: base.text,
             min_size: args.style.spacing.interact_size,
+            gap: args.style.spacing.icon_spacing,
         }
     }
 }

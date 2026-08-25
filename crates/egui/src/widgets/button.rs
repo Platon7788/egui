@@ -327,7 +327,10 @@ impl<'a> Button<'a> {
             frame,
             text_style,
             min_size: style_min_size,
+            gap,
         } = ui.widget_style(id, &classes);
+
+        layout = layout.fallback_gap(gap);
 
         // The theme decides how small a button may get — unless it is a `small` one, which sizes
         // itself purely from its contents.

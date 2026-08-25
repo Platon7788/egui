@@ -58,6 +58,11 @@ pub struct ButtonStyle {
     /// Ignored by a [`crate::Button::small`] button, which sizes itself purely from its contents
     /// and its own [`crate::Button::min_size`].
     pub min_size: Vec2,
+
+    /// The gap between the button's atoms, e.g. between its icon and its text.
+    ///
+    /// Overridden by [`crate::Button::gap`].
+    pub gap: f32,
 }
 
 impl WidgetStyle for ButtonStyle {}
