@@ -65,22 +65,35 @@ pub struct BaseStyle {
 
 impl WidgetStyle for BaseStyle {}
 
+/// How a widget's contents are laid out
+///
+/// A theme that gives a widget a size decides both together — the height and the gap of a small
+/// button are one look, not two — so they travel as one struct, shared by every widget style that
+/// lays its contents out with an [`crate::AtomLayout`].
+#[derive(Debug, Clone)]
+pub struct LayoutStyle {
+    /// How small the widget may get, before its contents are taken into account.
+    ///
+    /// A floor, not a size: a widget is never smaller than what it holds.
+    pub min_size: Vec2,
+
+    /// The gap between the widget's atoms, e.g. between an icon and the text beside it.
+    pub gap: f32,
+}
+
 /// Dedicated button style
 #[derive(Debug, Clone)]
 pub struct ButtonStyle {
     pub frame: Frame,
+
+    /// How the button's contents are laid out.
+    ///
+    /// [`LayoutStyle::min_size`] is ignored by a [`crate::Button::small`] button, which sizes
+    /// itself purely from its contents and its own [`crate::Button::min_size`];
+    /// [`LayoutStyle::gap`] is overridden by [`crate::Button::gap`].
+    pub layout: LayoutStyle,
+
     pub text_style: TextVisuals,
-
-    /// How small the button may get, before its contents are taken into account.
-    ///
-    /// Ignored by a [`crate::Button::small`] button, which sizes itself purely from its contents
-    /// and its own [`crate::Button::min_size`].
-    pub min_size: Vec2,
-
-    /// The gap between the button's atoms, e.g. between its icon and its text.
-    ///
-    /// Overridden by [`crate::Button::gap`].
-    pub gap: f32,
 }
 
 impl WidgetStyle for ButtonStyle {}
@@ -90,6 +103,13 @@ impl WidgetStyle for ButtonStyle {}
 pub struct TextEditStyle {
     /// Frame around the text, including its padding.
     pub frame: Frame,
+
+    /// How the field's contents are laid out.
+    ///
+    /// [`LayoutStyle::min_size`] is raised by [`crate::TextEdit::min_size`] and by the rows of
+    /// text the field holds, so it only ever sets a floor; [`LayoutStyle::gap`] separates the
+    /// text from a [`crate::TextEdit::prefix`] or [`crate::TextEdit::suffix`].
+    pub layout: LayoutStyle,
 
     /// The text being edited.
     pub text: TextVisuals,

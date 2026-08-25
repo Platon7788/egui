@@ -17,7 +17,7 @@ use crate::{
         self, CCursorRange, text_cursor_state::cursor_rect, visuals::paint_text_selection,
     },
     vec2,
-    widget_style::{Classes, HasClasses, READ_ONLY_CLASS, TextEditStyle},
+    widget_style::{Classes, HasClasses, LayoutStyle, READ_ONLY_CLASS, TextEditStyle},
 };
 
 use super::{TextEditOutput, TextEditState};
@@ -489,9 +489,18 @@ impl TextEdit<'_> {
         classes.add_class_if(READ_ONLY_CLASS, !text.is_mutable());
         let TextEditStyle {
             frame: styled_frame,
+            layout:
+                LayoutStyle {
+                    min_size: style_min_size,
+                    gap,
+                },
             text: text_visuals,
             hint_text_color,
         } = ui.widget_style(id, &classes);
+
+        // The theme sets a floor on the size; the builder's own `min_size` can only raise it,
+        // the same way it does for a button.
+        let min_size = min_size.max(style_min_size);
 
         let text_color = text_color
             .or_else(|| ui.visuals().override_text_color)
@@ -736,6 +745,7 @@ impl TextEdit<'_> {
 
             let allocated = AtomLayout::new(atoms)
                 .id(id)
+                .fallback_gap(gap)
                 .min_size(Vec2::new(allocate_width, min_height.at_least(min_size.y)))
                 .max_width(allocate_width)
                 .sense(sense)

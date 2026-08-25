@@ -4,7 +4,7 @@ use crate::{
     Atom, AtomExt as _, AtomKind, AtomLayout, AtomLayoutResponse, Atoms, Color32, CornerRadius,
     Frame, Image, IntoAtoms, Response, Sense, Stroke, TextStyle, TextWrapMode, Ui, Vec2, Widget,
     WidgetInfo, WidgetText, WidgetType,
-    widget_style::{ButtonStyle, Classes, HasClasses, SELECTED_CLASS, WidgetState},
+    widget_style::{ButtonStyle, Classes, HasClasses, LayoutStyle, SELECTED_CLASS, WidgetState},
 };
 
 /// Clickable button with text.
@@ -325,9 +325,12 @@ impl<'a> Button<'a> {
 
         let ButtonStyle {
             frame,
+            layout:
+                LayoutStyle {
+                    min_size: style_min_size,
+                    gap,
+                },
             text_style,
-            min_size: style_min_size,
-            gap,
         } = ui.widget_style(id, &classes);
 
         layout = layout.fallback_gap(gap);

@@ -5,8 +5,9 @@ use crate::{
     Frame, TextStyle,
     theme::StyleProvider,
     widget_style::{
-        BaseStyle, ButtonStyle, CheckboxStyle, HasClasses as _, LabelStyle, READ_ONLY_CLASS,
-        SELECTED_CLASS, SeparatorStyle, StyleArgs, TextEditStyle, TextVisuals, WidgetState,
+        BaseStyle, ButtonStyle, CheckboxStyle, HasClasses as _, LabelStyle, LayoutStyle,
+        READ_ONLY_CLASS, SELECTED_CLASS, SeparatorStyle, StyleArgs, TextEditStyle, TextVisuals,
+        WidgetState,
     },
 };
 
@@ -87,11 +88,13 @@ impl StyleProvider<ButtonStyle> for DefaultStyle {
                 .into(),
                 ..Default::default()
             },
+            layout: LayoutStyle {
+                // Historically only the height was floored, so that a button is at least as tall
+                // as any other interactive widget on the same row.
+                min_size: Vec2::new(0.0, spacing.interact_size.y),
+                gap: spacing.icon_spacing,
+            },
             text_style: ws.text,
-            // Historically only the height was floored, so that a button is at least as tall as
-            // any other interactive widget on the same row.
-            min_size: Vec2::new(0.0, spacing.interact_size.y),
-            gap: spacing.icon_spacing,
         }
     }
 }
@@ -144,6 +147,12 @@ impl StyleProvider<TextEditStyle> for DefaultStyle {
                     + Margin::same((widget_visuals.expansion - stroke.width).round() as i8),
                 outer_margin: Margin::same(-(widget_visuals.expansion as i8)),
                 ..Default::default()
+            },
+            layout: LayoutStyle {
+                // A text edit sizes itself from the rows it holds; egui's own theme adds no floor
+                // of its own.
+                min_size: Vec2::ZERO,
+                gap: style.spacing.icon_spacing,
             },
             text: ws.text,
             hint_text_color: style.visuals.weak_text_color(),

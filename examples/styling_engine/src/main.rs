@@ -6,7 +6,7 @@
 use eframe::egui::{
     self, CentralPanel, Color32, Frame, Panel,
     theme::StyleProvider,
-    widget_style::{BaseStyle, ButtonStyle, HasClasses as _, StyleArgs, WidgetState},
+    widget_style::{BaseStyle, ButtonStyle, HasClasses as _, LayoutStyle, StyleArgs, WidgetState},
 };
 
 /// Buttons with this class are styled as a destructive action.
@@ -67,9 +67,11 @@ impl StyleProvider<ButtonStyle> for MyTheme {
                 .fill(fill)
                 .corner_radius(self.corner_radius)
                 .inner_margin(8),
+            layout: LayoutStyle {
+                min_size: args.style.spacing.interact_size,
+                gap: args.style.spacing.icon_spacing,
+            },
             text_style: base.text,
-            min_size: args.style.spacing.interact_size,
-            gap: args.style.spacing.icon_spacing,
         }
     }
 }
